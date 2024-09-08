@@ -20,8 +20,7 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-
-package requires;
+package jtreg-ext.requires;
 
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
@@ -60,6 +59,7 @@ import jdk.test.lib.Container;
  * Do not use any APIs that may not be available in all target VMs.
  * Properties set by this Class will be available in the @requires expressions.
  */
+
 public class VMProps implements Callable<Map<String, String>> {
     // value known to jtreg as an indicator of error state
     private static final String ERROR_STATE = "__ERROR__";
@@ -71,6 +71,7 @@ public class VMProps implements Callable<Map<String, String>> {
 
         public void put(String key, Supplier<String> s) {
             String value;
+
             try {
                 value = s.get();
             } catch (Throwable t) {
