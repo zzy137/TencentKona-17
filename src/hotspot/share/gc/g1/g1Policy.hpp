@@ -55,12 +55,20 @@ class STWGCTimer;
 class G1Policy: public CHeapObj<mtGC> {
  private:
 
+//创建了ihopcontrol类 具体的adpativeihop策略可能在其中
   static G1IHOPControl* create_ihop_control(const G1OldGenAllocationTracker* old_gen_alloc_tracker,
                                             const G1Predictions* predictor);
   // Update the IHOP control with necessary statistics.
-  void update_ihop_prediction(double mutator_time_s,
-                              size_t young_gen_size,
-                              bool this_gc_was_young_only);
+  // 这个方法的主要作用是更新 IHOP 控制器的预测信息。IHOP 控制器负责确定并发标记应该开始的堆占用率阈值。
+  void update_ihop_prediction(double mutator_time_s, //最近一次gc之后的周期时间
+                              size_t young_gen_size, //最近一次gc后的yong代大小
+                              bool this_gc_was_young_only); //最近一次gc是不是yonggc
+
+  //当前的并发标记开始阈值
+  //目标占用率
+  //当前堆占用率
+  //最近一次分配的大小和持续时间
+  //预测的老年代分配速率和并发标记持续时间
   void report_ihop_statistics();
 
   G1Predictions _predictor;
@@ -70,22 +78,30 @@ class G1Policy: public CHeapObj<mtGC> {
 
   // Tracking the allocation in the old generation between
   // two GCs.
+  //这个要关注 用来追踪最近两次gc间的老区情况的
   G1OldGenAllocationTracker _old_gen_alloc_tracker;
   G1IHOPControl* _ihop_control;
 
   GCPolicyCounters* _policy_counters;
 
+//这个变量存储了上一次完全 GC 的开始时间(以秒为单位)。
   double _full_collection_start_sec;
 
+//这个变量表示 young 代区域列表的目标长度。
+  //G1 垃圾收集器会尝试将 young 代区域的数量保持在这个目标长度附近。
   uint _young_list_target_length;
+  //这个变量表示 young 代区域列表的固定长度。
+  // 这个长度可能会被用作 young 代区域列表的最小长度。
   uint _young_list_fixed_length;
 
   // The max number of regions we can extend the eden by while the GC
   // locker is active. This should be >= _young_list_target_length;
+//这些变量可能会被用于确定 young 代的大小和结构,以及在特殊情况下(如 GC Locker 活跃时)如何扩展 young 代。
   uint _young_list_max_length;
 
   // The survivor rate groups below must be initialized after the predictor because they
   // indirectly use it through the "this" object passed to their constructor.
+  //年轻代相关
   G1SurvRateGroup* _eden_surv_rate_group;
   G1SurvRateGroup* _survivor_surv_rate_group;
 
@@ -267,6 +283,8 @@ private:
   // Sets up marking if proper conditions are met.
   void maybe_start_marking();
   // Manage time-to-mixed tracking.
+  //它会根据当前 GC 暂停的类型(如 young GC 或 mixed GC)以及开始和结束时间来更新这个预计时间。
+  //这个信息可能会被用于调整 G1 垃圾收集的行为,例如决定何时启动混合 GC。 其实就是mixedgc的一个回收效率问题 可以以此来调整参数
   void update_time_to_mixed_tracking(G1GCPauseType gc_type, double start, double end);
   // Record the given STW pause with the given start and end times (in s).
   void record_pause(G1GCPauseType gc_type, double start, double end);
